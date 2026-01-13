@@ -35,7 +35,7 @@ public class OrderController {
         return ResponseEntity.ok(responseDto);
     }
 
-    @GetMapping("{/number/{orderNumber}}")
+    @GetMapping("/number/{orderNumber}")
     public ResponseEntity<OrderResponseDto> getOrderByNumber(@PathVariable String orderNumber) {
         OrderResponseDto responseDto = orderService.getOrderByNumber(orderNumber);
 

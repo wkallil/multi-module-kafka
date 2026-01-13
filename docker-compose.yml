@@ -1,29 +1,41 @@
-version: '3.8'
-
 services:
-  postgres-order:
-    image: postgres:15-alpine
-    container_name: postgres-order
+  order-db:
+    image: postgres:16-alpine
+    container_name: order-db
     environment:
-      POSTGRES_DB: orderdb
+      POSTGRES_DB: order_db
       POSTGRES_USER: orderuser
       POSTGRES_PASSWORD: orderpass
     ports:
       - "5432:5432"
     volumes:
-      - postgres-order-data:/var/lib/postgresql/data
+      - order-db-data:/var/lib/postgresql/data
+    networks:
+      - microservices-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U orderuser -d order_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
-  postgres-inventory:
-    image: postgres:15-alpine
-    container_name: postgres-inventory
+  inventory-db:
+    image: postgres:16-alpine
+    container_name: inventory-db
     environment:
-      POSTGRES_DB: inventorydb
+      POSTGRES_DB: inventory_db
       POSTGRES_USER: inventoryuser
       POSTGRES_PASSWORD: inventorypass
     ports:
       - "5433:5432"
     volumes:
-      - postgres-inventory-data:/var/lib/postgresql/data
+      - inventory-db-data:/var/lib/postgresql/data
+    networks:
+      - microservices-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U inventoryuser -d inventory_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   zookeeper:
     image: confluentinc/cp-zookeeper:7.5.0
@@ -31,14 +43,25 @@ services:
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "2181:2181"
+    networks:
+      - microservices-network
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "2181"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   kafka:
     image: confluentinc/cp-kafka:7.5.0
     container_name: kafka
     depends_on:
-      - zookeeper
+      zookeeper:
+        condition: service_healthy
     ports:
       - "9092:9092"
+      - "29092:29092"
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
@@ -46,39 +69,61 @@ services:
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+    networks:
+      - microservices-network
+    healthcheck:
+      test: ["CMD", "kafka-broker-api-versions", "--bootstrap-server", "localhost:9092"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
 
   order-service:
     build:
-      context: ./order-service
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: orderService/Dockerfile
     container_name: order-service
     depends_on:
-      - postgres-order
-      - kafka
+      order-db:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
     ports:
       - "8081:8081"
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-order:5432/orderdb
+      SPRING_DATASOURCE_URL: jdbc:postgresql://order-db:5432/order_db
       SPRING_DATASOURCE_USERNAME: orderuser
       SPRING_DATASOURCE_PASSWORD: orderpass
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+    networks:
+      - microservices-network
+    restart: unless-stopped
 
   inventory-service:
     build:
-      context: ./inventory-service
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: inventoryService/Dockerfile
     container_name: inventory-service
     depends_on:
-      - postgres-inventory
-      - kafka
+      inventory-db:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
     ports:
       - "8082:8082"
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-inventory:5432/inventorydb
+      SPRING_DATASOURCE_URL: jdbc:postgresql://inventory-db:5432/inventory_db
       SPRING_DATASOURCE_USERNAME: inventoryuser
       SPRING_DATASOURCE_PASSWORD: inventorypass
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+    networks:
+      - microservices-network
+    restart: unless-stopped
 
 volumes:
-  postgres-order-data:
-  postgres-inventory-data:
+  order-db-data:
+  inventory-db-data:
+
+networks:
+  microservices-network:
+    driver: bridge

@@ -37,7 +37,7 @@ public class Inventory {
         updatedAt = LocalDateTime.now();
     }
 
-    public Integer getTotaQuantity() {
+    public Integer getTotalQuantity() {
         return availableQuantity + reservedQuantity;
     }
 

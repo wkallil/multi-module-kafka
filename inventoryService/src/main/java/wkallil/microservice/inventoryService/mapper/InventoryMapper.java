@@ -31,7 +31,9 @@ public interface InventoryMapper {
     List<BackorderResponseDto> toBackorderResponseList(List<Backorder> backorders);
 
     @Mapping(target = "id", ignore = true)
-    @Mapping(target = "status", ignore = true)
+    @Mapping(target = "productCode", ignore = true)
+    @Mapping(target = "productName", ignore = true)
+    @Mapping(target = "reservedQuantity", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
     void updateInventoryFromRequest(UpdateInventoryRequestDto request, @MappingTarget Inventory inventory);

@@ -1,9 +1,11 @@
 package wkallil.microservice.inventoryService.controller;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import wkallil.microservice.inventoryService.controller.docs.InventoryControllerDocs;
 import wkallil.microservice.inventoryService.dto.requestDto.CreateInventoryRequestDto;
 import wkallil.microservice.inventoryService.dto.requestDto.UpdateInventoryRequestDto;
 import wkallil.microservice.inventoryService.dto.responseDto.BackorderResponseDto;
@@ -15,7 +17,8 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/inventory")
-public class InventoryController {
+@Tag(name = "Inventory Management", description = "APIs for managing inventory and stock levels")
+public class InventoryController implements InventoryControllerDocs {
 
     private final InventoryService inventoryService;
 
@@ -24,6 +27,7 @@ public class InventoryController {
     }
 
     @PostMapping
+    @Override
     public ResponseEntity<InventoryResponseDto> createInventory(@Valid @RequestBody CreateInventoryRequestDto request) {
         InventoryResponseDto response = inventoryService.createInventory(request);
 
@@ -31,6 +35,7 @@ public class InventoryController {
     }
 
     @GetMapping("/{productCode}")
+    @Override
     public ResponseEntity<InventoryResponseDto> getInventoryByProductCode(@PathVariable String productCode) {
         InventoryResponseDto response = inventoryService.getInventoryByProductCode(productCode);
 
@@ -38,6 +43,7 @@ public class InventoryController {
     }
 
     @GetMapping
+    @Override
     public ResponseEntity<List<InventoryResponseDto>> getAllInventories() {
         List<InventoryResponseDto> inventory = inventoryService.getAllInventories();
 
@@ -45,6 +51,7 @@ public class InventoryController {
     }
 
     @PutMapping("/{productCode}")
+    @Override
     public ResponseEntity<InventoryResponseDto> updateInventory(@PathVariable String productCode,
                                                                 @Valid @RequestBody UpdateInventoryRequestDto request) {
         InventoryResponseDto response = inventoryService.updateInventory(productCode, request);
@@ -53,6 +60,7 @@ public class InventoryController {
     }
 
     @GetMapping("/{productCode}/check")
+    @Override
     public ResponseEntity<StockCheckResponseDto> checkStock(@PathVariable String productCode,
                                                             @RequestParam Integer quantity) {
         StockCheckResponseDto response = inventoryService.checkStock(productCode, quantity);
@@ -61,6 +69,7 @@ public class InventoryController {
     }
 
     @GetMapping("/backorders")
+    @Override
     public ResponseEntity<List<BackorderResponseDto>> getAllBackorders() {
         List<BackorderResponseDto> backorders = inventoryService.getAllBackorders();
 
@@ -68,6 +77,7 @@ public class InventoryController {
     }
 
     @GetMapping("/backorders/order/{orderNumber}")
+    @Override
     public ResponseEntity<List<BackorderResponseDto>> getBackordersByOrderNumber(@PathVariable String orderNumber) {
         List<BackorderResponseDto> backorders = inventoryService.getBackordersByOrderNumber(orderNumber);
 

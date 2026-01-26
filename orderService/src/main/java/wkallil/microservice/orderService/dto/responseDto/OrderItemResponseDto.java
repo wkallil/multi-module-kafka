@@ -1,15 +1,29 @@
 package wkallil.microservice.orderService.dto.responseDto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
 import java.math.BigDecimal;
 import java.util.Objects;
 
+@Schema(description = "Order item details")
 public class OrderItemResponseDto {
 
+    @Schema(description = "Item ID", example = "1")
     private Long id;
+
+    @Schema(description = "Product code", example = "PROD-001")
     private String productCode;
+
+    @Schema(description = "Product name", example = "Laptop Dell XPS 13")
     private String productName;
+
+    @Schema(description = "Quantity ordered", example = "2")
     private Integer quantity;
+
+    @Schema(description = "Unit price", example = "1200.00")
     private BigDecimal unitPrice;
+
+    @Schema(description = "Total price for this item", example = "2400.00")
     private BigDecimal totalPrice;
 
     public OrderItemResponseDto() {

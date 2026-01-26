@@ -1,16 +1,27 @@
 package wkallil.microservice.inventoryService.dto.responseDto;
 
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.util.Objects;
 
+@Schema(description = "Stock availability check result")
 @JsonPropertyOrder({"productCode", "available", "availableQuantity", "requestedQuantity", "message"})
 public class StockCheckResponseDto {
 
+    @Schema(description = "Product code", example = "PROD-001")
     private String productCode;
+
+    @Schema(description = "Whether the product is available in requested quantity", example = "true")
     private boolean available;
+
+    @Schema(description = "Quantity currently available", example = "50")
     private Integer availableQuantity;
+
+    @Schema(description = "Quantity requested", example = "10")
     private Integer requestedQuantity;
+
+    @Schema(description = "Message describing the available status", example = "Sufficient stock available")
     private String message;
 
     public StockCheckResponseDto() {

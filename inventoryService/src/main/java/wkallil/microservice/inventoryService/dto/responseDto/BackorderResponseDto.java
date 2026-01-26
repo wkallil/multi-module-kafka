@@ -1,21 +1,40 @@
 package wkallil.microservice.inventoryService.dto.responseDto;
 
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.time.LocalDateTime;
 import java.util.Objects;
 
+@Schema(description = "Backorder details for items with insufficient stock")
 @JsonPropertyOrder({"id", "orderNumber", "productCode", "productName", "requestedQuantity", "missingQuantity", "status", "createdAt", "updatedAt"})
 public class BackorderResponseDto {
 
+    @Schema(description = "Backorder ID", example = "1")
     private Long id;
+
+    @Schema(description = "Order number", example = "ORD-12345")
     private String orderNumber;
+
+    @Schema(description = "Product code", example = "PROD-005")
     private String productCode;
+
+    @Schema(description = "Product name", example = "Webcam logitech C920")
     private String productName;
+
+    @Schema(description = "Quantity requested in the order", example = "10")
     private Integer requestedQuantity;
+
+    @Schema(description = "Quantity that is missing/backordered", example = "5")
     private Integer missingQuantity;
+
+    @Schema(description = "Backorder status", example = "PENDING")
     private String status;
+
+    @Schema(description = "Backorder creation timestamp", example = "2024-06-15T10:15:30")
     private LocalDateTime createdAt;
+
+    @Schema(description = "Last update timestamp", example = "2024-06-16T12:20:45")
     private LocalDateTime updatedAt;
 
     public BackorderResponseDto() {

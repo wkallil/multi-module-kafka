@@ -1,20 +1,37 @@
 package wkallil.microservice.inventoryService.dto.responseDto;
 
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.time.LocalDateTime;
 import java.util.Objects;
 
+@Schema(description = "Inventory item details")
 @JsonPropertyOrder({"id", "productCode", "productName", "availableQuantity", "reservedQuantity", "totalQuantity", "createdAt", "updatedAt"})
 public class InventoryResponseDto {
 
+    @Schema(description = "Inventory ID", example = "1")
     private Long id;
+
+    @Schema(description = "Product Code", example = "PROD-001")
     private String productCode;
+
+    @Schema(description = "Product name", example = "Laptop Dell XPS 13")
     private String productName;
+
+    @Schema(description = "Quantity available for sale", example = "50")
     private Integer availableQuantity;
+
+    @Schema(description = "Quantity reserved for pending orders", example = "10")
     private Integer reservedQuantity;
+
+    @Schema(description = "Total quantity (available + reserved)", example = "60")
     private Integer totalQuantity;
+
+    @Schema(description = "Creation timestamp", example = "2024-01-15T10:15:30")
     private LocalDateTime createdAt;
+
+    @Schema(description = "Last update timestamp", example = "2024-01-20T12:00:00")
     private LocalDateTime updatedAt;
 
     public InventoryResponseDto() {

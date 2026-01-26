@@ -1,5 +1,6 @@
 package wkallil.microservice.orderService.dto.responseDto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import wkallil.microservice.orderService.model.OrderStatus;
 
 import java.math.BigDecimal;
@@ -7,15 +8,31 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 
+@Schema(description = "Order details response")
 public class OrderResponseDto {
 
+    @Schema(description = "Order ID", example = "1")
     private Long id;
+
+    @Schema(description = "Unique order number", example = "ORD-123456")
     private String orderNumber;
+
+    @Schema(description = "Customer name", example = "Gabrielle Oliveira")
     private String customerName;
+
+    @Schema(description = "Current order status", example = "PENDING")
     private OrderStatus status;
+
+    @Schema(description = "Total order amount", example = "2400.00")
     private BigDecimal totalAmount;
+
+    @Schema(description = "List of items in the order")
     private List<OrderItemResponseDto> items;
+
+    @Schema(description = "Order creation timestamp", example = "2024-06-15T10:15:30")
     private LocalDateTime createdAt;
+
+    @Schema(description = "Order last update timestamp", example = "2024-06-16T12:20:45")
     private LocalDateTime updatedAt;
 
     public OrderResponseDto() {

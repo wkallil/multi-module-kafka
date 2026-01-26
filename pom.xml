@@ -27,6 +27,7 @@
         <postgresql.version>42.7.8</postgresql.version>
         <flyway-db.version>11.17.0</flyway-db.version>
         <h2-db.version>2.4.240</h2-db.version>
+        <springdoc.version>3.0.0</springdoc.version>
     </properties>
 
     <dependencyManagement>
@@ -56,6 +57,11 @@
                 <version>4.0.0</version>
             </dependency>
 
+            <dependency>
+                <groupId>org.springdoc</groupId>
+                <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+                <version>${springdoc.version}</version>
+            </dependency>
             <!-- Database -->
             <dependency>
                 <groupId>org.postgresql</groupId>

@@ -14,7 +14,7 @@ public class KafkaProducerService {
 
     private final KafkaTemplate<String, OrderCreatedEventDto> kafkaTemplate;
 
-    @Value("${kafka.topics.order-created}")
+    @Value("${spring.kafka.topics.order-created}")
     private String orderCreatedTopic;
 
 

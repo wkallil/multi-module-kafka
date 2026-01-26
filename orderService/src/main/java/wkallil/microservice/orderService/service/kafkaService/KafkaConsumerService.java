@@ -19,7 +19,7 @@ public class KafkaConsumerService {
     }
 
 
-    @KafkaListener(topics = "${kafka.topics.inventory-response}", groupId = "${spring.kafka.consumer.group-id}")
+    @KafkaListener(topics = "${spring.kafka.topics.inventory-response}", groupId = "${spring.kafka.consumer.group-id}")
     public void consumeInventoryResponse(InventoryResponseDto response) {
         logger.info("Received inventory response for order: {} with status: {}",
                 response.getOrderNumber(), response.getStatus());

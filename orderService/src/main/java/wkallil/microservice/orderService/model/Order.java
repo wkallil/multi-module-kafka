@@ -51,12 +51,12 @@ public class Order {
 
     public void addItem(OrderItem item) {
         items.add(item);
-        // items.setOrder(this);
+        item.setOrder(this);
     }
 
     public void removeItem(OrderItem item) {
         items.remove(item);
-        // item.setOrder(null);
+        item.setOrder(null);
     }
 
     public Order() {

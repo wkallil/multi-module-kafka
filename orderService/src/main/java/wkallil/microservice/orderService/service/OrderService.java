@@ -33,17 +33,21 @@ public class OrderService {
 
     @Transactional
     public OrderResponseDto createOrder(CreateOrderRequestDto requestDto) {
-        Order order = orderMapper.toEntity(requestDto);
-
+        Order order = new Order();
         order.setOrderNumber(generateOrderNumber());
+        order.setCustomerName(requestDto.getCustomerName());
         order.setStatus(OrderStatus.PENDING);
 
         BigDecimal totalAmount = BigDecimal.ZERO;
+
         for (OrderItemRequestDto itemRequest : requestDto.getItems()) {
             OrderItem item = orderMapper.toEntity(itemRequest);
+
             order.addItem(item);
+
             totalAmount = totalAmount.add(item.getTotalPrice());
         }
+
         order.setTotalAmount(totalAmount);
 
         Order savedOrder = orderRepository.save(order);

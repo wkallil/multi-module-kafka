@@ -7,6 +7,11 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.hateoas.EntityModel;
+import org.springframework.hateoas.PagedModel;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -48,8 +53,8 @@ public class OrderController implements OrderControllerDocs {
     )
     @PostMapping
     @Override
-    public ResponseEntity<OrderResponseDto> createOrder(@Valid @RequestBody CreateOrderRequestDto request) {
-        OrderResponseDto responseDto = orderService.createOrder(request);
+    public ResponseEntity<EntityModel<OrderResponseDto>> createOrder(@Valid @RequestBody CreateOrderRequestDto request) {
+        EntityModel<OrderResponseDto> responseDto = orderService.createOrder(request);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(responseDto);
     }
@@ -73,8 +78,8 @@ public class OrderController implements OrderControllerDocs {
     )
     @GetMapping("/{id}")
     @Override
-    public ResponseEntity<OrderResponseDto> getOrderById(@PathVariable Long id) {
-        OrderResponseDto responseDto = orderService.getOrderById(id);
+    public ResponseEntity<EntityModel<OrderResponseDto>> getOrderById(@PathVariable Long id) {
+        EntityModel<OrderResponseDto> responseDto = orderService.getOrderById(id);
 
         return ResponseEntity.ok(responseDto);
     }
@@ -98,8 +103,8 @@ public class OrderController implements OrderControllerDocs {
     )
     @GetMapping("/number/{orderNumber}")
     @Override
-    public ResponseEntity<OrderResponseDto> getOrderByNumber(@PathVariable String orderNumber) {
-        OrderResponseDto responseDto = orderService.getOrderByNumber(orderNumber);
+    public ResponseEntity<EntityModel<OrderResponseDto>> getOrderByNumber(@PathVariable String orderNumber) {
+        EntityModel<OrderResponseDto> responseDto = orderService.getOrderByNumber(orderNumber);
 
         return ResponseEntity.ok(responseDto);
     }
@@ -118,8 +123,14 @@ public class OrderController implements OrderControllerDocs {
     )
     @GetMapping
     @Override
-    public ResponseEntity<List<OrderResponseDto>> getAllOrders() {
-        List<OrderResponseDto> orders = orderService.getAllOrders();
+    public ResponseEntity<PagedModel<EntityModel<OrderResponseDto>>> getAllOrders(@RequestParam(defaultValue = "0") int page,
+                                                                                  @RequestParam(defaultValue = "5") int size,
+                                                                                  @RequestParam(required = false) Sort sort) {
+        Pageable pageable = sort != null
+                ? PageRequest.of(page, size, sort)
+                : PageRequest.of(page, size, Sort.by("createdAt").descending());
+
+        PagedModel<EntityModel<OrderResponseDto>> orders = orderService.getAllOrders(pageable);
 
         return ResponseEntity.ok(orders);
     }
@@ -138,8 +149,15 @@ public class OrderController implements OrderControllerDocs {
     )
     @GetMapping("/status/{status}")
     @Override
-    public ResponseEntity<List<OrderResponseDto>> getOrdersByStatus(@PathVariable OrderStatus status) {
-        List<OrderResponseDto> orders = orderService.getOrdersByStatus(status);
+    public ResponseEntity<PagedModel<EntityModel<OrderResponseDto>>> getOrdersByStatus(@PathVariable OrderStatus status,
+                                                                                       @RequestParam(defaultValue = "0") int page,
+                                                                                       @RequestParam(defaultValue = "5") int size,
+                                                                                       @RequestParam(required = false) Sort sort) {
+        Pageable pageable = sort != null
+                ? PageRequest.of(page, size, sort)
+                : PageRequest.of(page, size, Sort.by("createdAt").descending());
+
+        PagedModel<EntityModel<OrderResponseDto>> orders = orderService.getOrdersByStatus(status, pageable);
 
         return ResponseEntity.ok(orders);
     }

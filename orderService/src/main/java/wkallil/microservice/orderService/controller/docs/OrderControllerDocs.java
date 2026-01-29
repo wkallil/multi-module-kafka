@@ -6,9 +6,13 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Sort;
+import org.springframework.hateoas.EntityModel;
+import org.springframework.hateoas.PagedModel;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import wkallil.microservice.orderService.dto.requestDto.CreateOrderRequestDto;
 import wkallil.microservice.orderService.dto.responseDto.OrderResponseDto;
 import wkallil.microservice.orderService.model.OrderStatus;
@@ -33,7 +37,7 @@ public interface OrderControllerDocs {
                     )
             }
     )
-    ResponseEntity<OrderResponseDto> createOrder(@Valid @RequestBody CreateOrderRequestDto request);
+    ResponseEntity<EntityModel<OrderResponseDto>> createOrder(@Valid @RequestBody CreateOrderRequestDto request);
 
     @Operation(
             summary = "Get order by ID",
@@ -52,7 +56,7 @@ public interface OrderControllerDocs {
                     )
             }
     )
-    ResponseEntity<OrderResponseDto> getOrderById(@PathVariable Long id);
+    ResponseEntity<EntityModel<OrderResponseDto>> getOrderById(@PathVariable Long id);
 
     @Operation(
             summary = "Get order by order number",
@@ -71,7 +75,7 @@ public interface OrderControllerDocs {
                     )
             }
     )
-    ResponseEntity<OrderResponseDto> getOrderByNumber(@PathVariable String orderNumber);
+    ResponseEntity<EntityModel<OrderResponseDto>> getOrderByNumber(@PathVariable String orderNumber);
 
     @Operation(
             summary = "Get all orders",
@@ -85,7 +89,9 @@ public interface OrderControllerDocs {
                     )
             }
     )
-    ResponseEntity<List<OrderResponseDto>> getAllOrders();
+    ResponseEntity<PagedModel<EntityModel<OrderResponseDto>>> getAllOrders(@RequestParam(defaultValue = "0") int page,
+                                                                           @RequestParam(defaultValue = "5") int size,
+                                                                           @RequestParam(required = false) Sort sort);
 
     @Operation(
             summary = "Get orders by status",
@@ -99,5 +105,8 @@ public interface OrderControllerDocs {
                     )
             }
     )
-    ResponseEntity<List<OrderResponseDto>> getOrdersByStatus(@PathVariable OrderStatus status);
+    ResponseEntity<PagedModel<EntityModel<OrderResponseDto>>> getOrdersByStatus(@PathVariable OrderStatus status,
+                                                                                @RequestParam(defaultValue = "0") int page,
+                                                                                @RequestParam(defaultValue = "5") int size,
+                                                                                @RequestParam(required = false) Sort sort);
 }

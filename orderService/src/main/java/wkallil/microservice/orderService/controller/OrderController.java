@@ -21,8 +21,6 @@ import wkallil.microservice.orderService.dto.responseDto.OrderResponseDto;
 import wkallil.microservice.orderService.model.OrderStatus;
 import wkallil.microservice.orderService.service.OrderService;
 
-import java.util.List;
-
 @RestController
 @RequestMapping("/api/orders")
 @Tag(name = "Order Management", description = "APIs for managing customer orders")

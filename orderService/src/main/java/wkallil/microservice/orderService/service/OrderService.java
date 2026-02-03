@@ -205,12 +205,12 @@ public class OrderService {
 
 
         entityModel.add(linkTo(methodOn(OrderController.class)
-                .getAllOrders(0, 20, null))
+                .getAllOrders(0, 5, null))
                 .withRel("all-orders"));
 
 
         entityModel.add(linkTo(methodOn(OrderController.class)
-                .getOrdersByStatus(response.getStatus(), 0, 20, null))
+                .getOrdersByStatus(response.getStatus(), 0, 5, null))
                 .withRel("same-status"));
 
         return entityModel;

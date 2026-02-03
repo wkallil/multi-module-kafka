@@ -1,7 +1,12 @@
 package wkallil.microservice.inventoryService.service;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.hateoas.EntityModel;
+import org.springframework.hateoas.PagedModel;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import wkallil.microservice.inventoryService.controller.InventoryController;
 import wkallil.microservice.inventoryService.dto.kafkaDto.InventoryResponseEventDto;
 import wkallil.microservice.inventoryService.dto.kafkaDto.InventoryStatus;
 import wkallil.microservice.inventoryService.dto.kafkaDto.OrderCreatedEventDto;
@@ -18,6 +23,10 @@ import wkallil.microservice.inventoryService.repository.BackorderRepository;
 import wkallil.microservice.inventoryService.repository.InventoryRepository;
 
 import java.util.List;
+import java.util.stream.Collectors;
+
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 
 @Service
 public class InventoryService {
@@ -33,39 +42,83 @@ public class InventoryService {
     }
 
     @Transactional
-    public InventoryResponseDto createInventory(CreateInventoryRequestDto requestDto) {
+    public EntityModel<InventoryResponseDto> createInventory(CreateInventoryRequestDto requestDto) {
         if (inventoryRepository.existsByProductCode(requestDto.getProductCode())) {
             throw new RuntimeException("Product already exists " + requestDto.getProductCode());
         }
 
         Inventory inventory = inventoryMapper.toEntity(requestDto);
         Inventory savedInventory = inventoryRepository.save(inventory);
+        InventoryResponseDto response = inventoryMapper.toResponse(savedInventory);
 
-        return inventoryMapper.toResponse(savedInventory);
+        return addHateoasLinks(response);
     }
 
     @Transactional(readOnly = true)
-    public InventoryResponseDto getInventoryByProductCode(String productCode) {
+    public EntityModel<InventoryResponseDto> getInventoryByProductCode(String productCode) {
         Inventory inventory = inventoryRepository.findByProductCode(productCode)
                 .orElseThrow(() -> new RuntimeException("Product not found: " + productCode));
+        InventoryResponseDto response = inventoryMapper.toResponse(inventory);
 
-        return inventoryMapper.toResponse(inventory);
+        return addHateoasLinks(response);
     }
 
     @Transactional(readOnly = true)
-    public List<InventoryResponseDto> getAllInventories() {
-        return inventoryMapper.toResponseList(inventoryRepository.findAll());
+    public PagedModel<EntityModel<InventoryResponseDto>> getAllInventories(Pageable pageable) {
+        Page<Inventory> inventoryPage = inventoryRepository.findAll(pageable);
+
+        List<EntityModel<InventoryResponseDto>> inventories = inventoryPage.getContent().stream()
+                .map(inventory -> {
+                    InventoryResponseDto response = inventoryMapper.toResponse(inventory);
+                    return addHateoasLinks(response);
+                }).collect(Collectors.toList());
+
+        PagedModel.PageMetadata metadata = new PagedModel.PageMetadata(
+                inventoryPage.getSize(),
+                inventoryPage.getNumber(),
+                inventoryPage.getTotalElements(),
+                inventoryPage.getTotalPages()
+        );
+
+        PagedModel<EntityModel<InventoryResponseDto>> pagedModel = PagedModel.of(inventories, metadata);
+
+        pagedModel.add(linkTo(methodOn(InventoryController.class)
+                .getAllInventories(pageable.getPageNumber(), pageable.getPageSize(), pageable.getSort()))
+                .withSelfRel());
+
+        if (inventoryPage.hasNext()) {
+            pagedModel.add(linkTo(methodOn(InventoryController.class)
+                    .getAllInventories(pageable.getPageNumber() + 1, pageable.getPageSize(), pageable.getSort()))
+                    .withRel("next"));
+        }
+
+        if (inventoryPage.hasPrevious()) {
+            pagedModel.add(linkTo(methodOn(InventoryController.class)
+                    .getAllInventories(pageable.getPageNumber() - 1, pageable.getPageSize(), pageable.getSort()))
+                    .withRel("prev"));
+        }
+
+        pagedModel.add(linkTo(methodOn(InventoryController.class)
+                .getAllInventories(0, pageable.getPageSize(), pageable.getSort()))
+                .withRel("first"));
+
+        pagedModel.add(linkTo(methodOn(InventoryController.class)
+                .getAllInventories(inventoryPage.getTotalPages() - 1, pageable.getPageSize(), pageable.getSort()))
+                .withRel("last"));
+
+        return pagedModel;
     }
 
     @Transactional
-    public InventoryResponseDto updateInventory(String productCode, UpdateInventoryRequestDto requestDto) {
+    public EntityModel<InventoryResponseDto> updateInventory(String productCode, UpdateInventoryRequestDto requestDto) {
         Inventory inventory = inventoryRepository.findByProductCode(productCode)
                 .orElseThrow(() -> new RuntimeException("Product not found: " + productCode));
 
         inventoryMapper.updateInventoryFromRequest(requestDto, inventory);
         Inventory updatedInventory = inventoryRepository.save(inventory);
+        InventoryResponseDto response = inventoryMapper.toResponse(updatedInventory);
 
-        return inventoryMapper.toResponse(updatedInventory);
+        return addHateoasLinks(response);
     }
 
     @Transactional
@@ -147,15 +200,57 @@ public class InventoryService {
     }
 
     @Transactional(readOnly = true)
-    public List<BackorderResponseDto> getBackordersByOrderNumber(String orderNumber) {
-        return inventoryMapper.toBackorderResponseList(
-                backorderRepository.findByOrderNumber(orderNumber)
-        );
+    public PagedModel<EntityModel<BackorderResponseDto>> getBackordersByOrderNumber(String orderNumber, Pageable pageable) {
+        Page<Backorder> backorderPage = backorderRepository.findByOrderNumber(orderNumber, pageable);
+
+        return createBackorderPagedModel(backorderPage, pageable);
     }
 
     @Transactional(readOnly = true)
-    public List<BackorderResponseDto> getAllBackorders() {
-        return inventoryMapper.toBackorderResponseList(backorderRepository.findAll());
+    public PagedModel<EntityModel<BackorderResponseDto>> getAllBackorders(Pageable pageable) {
+        Page<Backorder> backorderPage = backorderRepository.findAll(pageable);
+
+        return createBackorderPagedModel(backorderPage, pageable);
+    }
+
+    private EntityModel<InventoryResponseDto> addHateoasLinks(InventoryResponseDto response) {
+        EntityModel<InventoryResponseDto> entityModel = EntityModel.of(response);
+
+        entityModel.add(linkTo(methodOn(InventoryController.class)
+                .getInventoryByProductCode(response.getProductCode()))
+                .withSelfRel());
+
+        entityModel.add(linkTo(methodOn(InventoryController.class)
+                .checkStock(response.getProductCode(), 1))
+                .withRel("check-stock"));
+
+        entityModel.add(linkTo(methodOn(InventoryController.class)
+                .updateInventory(response.getProductCode(), null))
+                .withRel("update"));
+
+        entityModel.add(linkTo(methodOn(InventoryController.class)
+                .getAllInventories(0, 5, null))
+                .withRel("all-inventories"));
+
+        return entityModel;
+    }
+
+    private EntityModel<BackorderResponseDto> addBackorderHateoasLinks(BackorderResponseDto response) {
+        EntityModel<BackorderResponseDto> entityModel = EntityModel.of(response);
+
+        entityModel.add(linkTo(methodOn(InventoryController.class)
+                .getInventoryByProductCode(response.getProductCode()))
+                .withRel("product"));
+
+        entityModel.add(linkTo(methodOn(InventoryController.class)
+                .getBackordersByOrderNumber(response.getOrderNumber(), 0, 5, null))
+                .withRel("order-backorders"));
+
+        entityModel.add(linkTo(methodOn(InventoryController.class)
+                .getAllBackorders(0, 5, null))
+                .withRel("all-backorders"));
+
+        return entityModel;
     }
 
     private void createBackorder(String orderNumber, Inventory inventory, Integer requestQuantity) {
@@ -166,5 +261,40 @@ public class InventoryService {
         backorder.setRequestedQuantity(requestQuantity);
         backorder.setMissingQuantity(requestQuantity - inventory.getAvailableQuantity());
         backorderRepository.save(backorder);
+    }
+
+    private PagedModel<EntityModel<BackorderResponseDto>> createBackorderPagedModel(Page<Backorder> backorderPage, Pageable pageable) {
+        List<EntityModel<BackorderResponseDto>> backorders = backorderPage.getContent().stream()
+                .map(backorder -> {
+                    BackorderResponseDto response = inventoryMapper.toResponse(backorder);
+                    return addBackorderHateoasLinks(response);
+                }).collect(Collectors.toList());
+
+        PagedModel.PageMetadata metadata = new PagedModel.PageMetadata(
+                backorderPage.getSize(),
+                backorderPage.getNumber(),
+                backorderPage.getTotalElements(),
+                backorderPage.getTotalPages()
+        );
+
+        PagedModel<EntityModel<BackorderResponseDto>> pagedModel = PagedModel.of(backorders, metadata);
+
+        pagedModel.add(linkTo(methodOn(InventoryController.class)
+                .getAllBackorders(pageable.getPageNumber(), pageable.getPageSize(), pageable.getSort()))
+                .withSelfRel());
+
+        if (backorderPage.hasNext()) {
+            pagedModel.add(linkTo(methodOn(InventoryController.class)
+                    .getAllBackorders(pageable.getPageNumber() + 1, pageable.getPageSize(), pageable.getSort()))
+                    .withRel("next"));
+        }
+
+        if (backorderPage.hasPrevious()) {
+            pagedModel.add(linkTo(methodOn(InventoryController.class)
+                    .getAllBackorders(pageable.getPageNumber() - 1, pageable.getPageSize(), pageable.getSort()))
+                    .withRel("prev"));
+        }
+
+        return pagedModel;
     }
 }

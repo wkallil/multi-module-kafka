@@ -1,5 +1,7 @@
 package wkallil.microservice.inventoryService.repository;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import wkallil.microservice.inventoryService.model.Backorder;
@@ -9,6 +11,8 @@ import java.util.List;
 public interface BackorderRepository extends JpaRepository<Backorder, Long> {
 
     List<Backorder> findByOrderNumber(String orderNumber);
+
+    Page<Backorder> findByOrderNumber(String orderNumber, Pageable pageable);
 
     List<Backorder> findByProductCode(String productCode);
 

@@ -6,6 +6,9 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Sort;
+import org.springframework.hateoas.EntityModel;
+import org.springframework.hateoas.PagedModel;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import wkallil.microservice.inventoryService.dto.requestDto.CreateInventoryRequestDto;
@@ -38,7 +41,7 @@ public interface InventoryControllerDocs {
                     )
             }
     )
-    ResponseEntity<InventoryResponseDto> createInventory(@Valid @RequestBody CreateInventoryRequestDto request);
+    ResponseEntity<EntityModel<InventoryResponseDto>> createInventory(@Valid @RequestBody CreateInventoryRequestDto request);
 
     @Operation(
             summary = "Get inventory by product code",
@@ -57,7 +60,7 @@ public interface InventoryControllerDocs {
                     )
             }
     )
-    ResponseEntity<InventoryResponseDto> getInventoryByProductCode(@PathVariable String productCode);
+    ResponseEntity<EntityModel<InventoryResponseDto>> getInventoryByProductCode(@PathVariable String productCode);
 
     @Operation(
             summary = "Get all inventory",
@@ -71,7 +74,9 @@ public interface InventoryControllerDocs {
                     )
             }
     )
-    ResponseEntity<List<InventoryResponseDto>> getAllInventories();
+    ResponseEntity<PagedModel<EntityModel<InventoryResponseDto>>> getAllInventories(@RequestParam(defaultValue = "0") int page,
+                                                                                    @RequestParam(defaultValue = "5") int size,
+                                                                                    @RequestParam(required = false) Sort sort);
 
     @Operation(
             summary = "Update inventory",
@@ -90,7 +95,7 @@ public interface InventoryControllerDocs {
                     )
             }
     )
-    ResponseEntity<InventoryResponseDto> updateInventory(@PathVariable String productCode,
+    ResponseEntity<EntityModel<InventoryResponseDto>> updateInventory(@PathVariable String productCode,
                                                          @Valid @RequestBody UpdateInventoryRequestDto request);
 
     @Operation(
@@ -121,7 +126,9 @@ public interface InventoryControllerDocs {
                     )
             }
     )
-    ResponseEntity<List<BackorderResponseDto>> getAllBackorders();
+    ResponseEntity<PagedModel<EntityModel<BackorderResponseDto>>> getAllBackorders(@RequestParam(defaultValue = "0") int page,
+                                                                                   @RequestParam(defaultValue = "5") int size,
+                                                                                   @RequestParam(required = false) Sort sort);
 
     @Operation(
             summary = "Get backorders by order number",
@@ -135,5 +142,8 @@ public interface InventoryControllerDocs {
                     )
             }
     )
-    ResponseEntity<List<BackorderResponseDto>> getBackordersByOrderNumber(@PathVariable String orderNumber);
+    ResponseEntity<PagedModel<EntityModel<BackorderResponseDto>>> getBackordersByOrderNumber(@PathVariable String orderNumber,
+                                                                                             @RequestParam(defaultValue = "0") int page,
+                                                                                             @RequestParam(defaultValue = "5") int size,
+                                                                                             @RequestParam(required = false) Sort sort);
 }
